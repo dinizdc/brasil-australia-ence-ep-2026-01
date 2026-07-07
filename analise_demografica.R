@@ -27,6 +27,9 @@ if (!dir.exists("figuras")) dir.create("figuras")
 
 COR_BRASIL    <- "#E63946"
 COR_AUSTRALIA <- "#457B9D"
+COR_SSP1      <- "#2A9D8F"   # verde-azulado (sustentabilidade)
+COR_SSP2      <- "#E9C46A"   # amarelo (caminho do meio)
+COR_SSP3      <- "#E76F51"   # laranja (rivalidade)
 
 tema_demografico <- theme_minimal(base_size = 12) +
   theme(
@@ -522,12 +525,86 @@ cat("✔ Figura 6 salva.\n")
 # Baixe o CSV em: https://tntcat.iiasa.ac.at/SspDb
 # Salve como "ssp_data.csv" na pasta do projeto e descomente abaixo:
 #
-# ssp_raw <- read_csv("ssp_data.csv")
-# print(names(ssp_raw))
-# print(head(ssp_raw))
-# =============================================================================
+ ssp_raw <- read_csv("ssp_data.csv")
+ print(names(ssp_raw))
+ print(head(ssp_raw))
 
-cat("\n⚠ Figura 7 (SSP): baixe o CSV em tntcat.iiasa.ac.at/SspDb\n\n")
+# Filtrar e transformar dados do Brasil
+ssp_brasil <- ssp_raw %>%
+  filter(region == "Brazil", scenario %in% c("SSP1", "SSP2", "SSP3")) %>%
+  select(scenario, `2025`:`2050`) %>%
+  pivot_longer(
+    cols = `2025`:`2050`,
+    names_to = "year",
+    values_to = "value"
+  ) %>%
+  pivot_wider(
+    names_from = scenario,
+    values_from = value
+  ) %>%
+  mutate(
+    year = as.numeric(year),
+    pais = "Brasil"
+  ) %>%
+  select(year, SSP1, SSP2, SSP3, pais)
+
+# Filtrar e transformar dados da Austrália
+ssp_australia <- ssp_raw %>%
+  filter(region == "Australia", scenario %in% c("SSP1", "SSP2", "SSP3")) %>%
+  select(scenario, `2025`:`2050`) %>%
+  pivot_longer(
+    cols = `2025`:`2050`,
+    names_to = "year",
+    values_to = "value"
+  ) %>%
+  pivot_wider(
+    names_from = scenario,
+    values_from = value
+  ) %>%
+  mutate(
+    year = as.numeric(year),
+    pais = "Austrália"
+  ) %>%
+  select(year, SSP1, SSP2, SSP3, pais)
+
+ssp_data <- bind_rows(ssp_brasil, ssp_australia) %>%
+  pivot_longer(cols = c(SSP1, SSP2, SSP3),
+               names_to = "cenario", values_to = "pop_M")
+
+# --- GRÁFICO 7: Cenários SSP -------------------------------------------------
+g7 <- ggplot(ssp_data,
+             aes(x = year, y = pop_M, colour = cenario,
+                 linetype = cenario, group = cenario)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 2.5) +
+  facet_wrap(~ pais, scales = "free_y") +
+  scale_colour_manual(
+    values = c("SSP1" = COR_SSP1, "SSP2" = COR_SSP2, "SSP3" = COR_SSP3),
+    labels = c("SSP1" = "SSP1 — Sustentabilidade",
+               "SSP2" = "SSP2 — Caminho do Meio",
+               "SSP3" = "SSP3 — Rivalidade Regional")
+  ) +
+  scale_linetype_manual(
+    values = c("SSP1" = "solid", "SSP2" = "dashed", "SSP3" = "dotdash"),
+    labels = c("SSP1" = "SSP1 — Sustentabilidade",
+               "SSP2" = "SSP2 — Caminho do Meio",
+               "SSP3" = "SSP3 — Rivalidade Regional")
+  ) +
+  scale_x_continuous(breaks = seq(2025, 2050, by = 5)) +
+  scale_y_continuous(labels = label_number(suffix = " M")) +
+  labs(
+    title    = "Figura 7 – Projeções populacionais por cenário SSP: Brasil e Austrália (2025–2050)",
+    subtitle = "Baseado nas narrativas dos Shared Socioeconomic Pathways (IPCC/IIASA)",
+    x = "Ano", y = "População (milhões)",
+    colour   = "Cenário SSP",
+    linetype = "Cenário SSP",
+    caption  = "Fontes: IIASA SSP Database 3.1; United Nations WPP 2024."
+  ) +
+  tema_demografico
+
+ggsave("figuras/fig7_ssp.pdf", g7, width = 10, height = 5.5, device = "pdf")
+ggsave("figuras/fig7_ssp.png", g7, width = 10, height = 5.5, dpi = 300)
+cat("✔ Figura 7 salva.\n")
 
 # =============================================================================
 # SEÇÃO H: TABELA COMPLETA DE INDICADORES — geração automática do .tex
