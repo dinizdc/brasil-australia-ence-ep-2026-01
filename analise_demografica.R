@@ -185,10 +185,6 @@ ggsave("figuras/fig1_populacao_total.png", g1, width = 9, height = 5.5, dpi = 30
 cat("✔ Figura 1 salva.\n")
 
 
-
-
-
-
 # =============================================================================
 # SEÇÃO B: TAXA DE FECUNDIDADE TOTAL COM IC 80% E 95%
 # =============================================================================
@@ -263,11 +259,6 @@ g2 <- ggplot() +
 ggsave("figuras/fig2_fecundidade.pdf", g2, width = 9, height = 5.5)
 ggsave("figuras/fig2_fecundidade.png", g2, width = 9, height = 5.5, dpi = 300)
 cat("✔ Figura 2 salva.\n")
-
-
-
-
-
 
 
 # =============================================================================
@@ -356,12 +347,6 @@ ggsave("figuras/fig3_expectativa_vida.pdf", g3, width = 9, height = 5.5)
 ggsave("figuras/fig3_expectativa_vida.png", g3, width = 9, height = 5.5, dpi = 300)
 cat("✔ Figura 3 salva.\n")
 
-
-
-
-
-
-
 # =============================================================================
 # SEÇÃO D: MIGRAÇÃO LÍQUIDA ANUAL
 # =============================================================================
@@ -398,11 +383,6 @@ g4 <- ggplot(mig_hist,
 ggsave("figuras/fig4_migracao.pdf", g4, width = 9, height = 7)
 ggsave("figuras/fig4_migracao.png", g4, width = 9, height = 7, dpi = 300)
 cat("✔ Figura 4 salva.\n")
-
-
-
-
-
 
 
 # =============================================================================
@@ -449,7 +429,7 @@ g5 <- ggplot(piramide_data,
     limits = c(-8, 8), breaks = seq(-8, 8, by = 2)
   ) +
   labs(
-    title    = paste0("Figura 5 – Pirâmide etária: Brasil e Austrália (", ano_piramide, ")"),
+    title    = paste0("Figura 6 – Pirâmide etária: Brasil e Austrália (", ano_piramide, ")"),
     subtitle = "Proporção de cada grupo etário quinquenal sobre o total da população",
     x = "Proporção (%)", y = "Grupo etário",
     fill    = "Sexo",
@@ -460,8 +440,6 @@ g5 <- ggplot(piramide_data,
 ggsave("figuras/fig5_piramides.pdf", g5, width = 10, height = 6.5)
 ggsave("figuras/fig5_piramides.png", g5, width = 10, height = 6.5, dpi = 300)
 cat("✔ Figura 5 salva.\n")
-
-
 
 
 # =============================================================================
@@ -496,7 +474,7 @@ g6 <- ggplot(dep_data,
   scale_y_continuous(labels = label_percent(scale = 1, suffix = "%"),
                      breaks = seq(0, 40, by = 5)) +
   labs(
-    title    = "Figura 6 – Razão de dependência do idoso: Brasil e Austrália (1950–2023)",
+    title    = "Figura 7 – Razão de dependência do idoso: Brasil e Austrália (1950–2023)",
     subtitle = "População de 65+ / população de 15–64 anos × 100",
     x = "Ano", y = "Razão de dependência (%)",
     colour  = "País",
@@ -509,25 +487,12 @@ ggsave("figuras/fig6_dependencia.png", g6, width = 9, height = 5.5, dpi = 300)
 cat("✔ Figura 6 salva.\n")
 
 
-
-
-
-
-
-
-
-
-
-
-
 # =============================================================================
 # SEÇÃO G: CENÁRIOS Shared Socioeconomic Pathways (SSPs)
 # Baixe o CSV em: https://tntcat.iiasa.ac.at/SspDb
 # Salve como "ssp_data.csv" na pasta do projeto e descomente abaixo:
 #
- ssp_raw <- read_csv("ssp_data.csv")
- print(names(ssp_raw))
- print(head(ssp_raw))
+ssp_raw <- read_csv("ssp_data.csv")
 
 # Filtrar e transformar dados do Brasil
 ssp_brasil <- ssp_raw %>%
@@ -547,6 +512,8 @@ ssp_brasil <- ssp_raw %>%
     pais = "Brasil"
   ) %>%
   select(year, SSP1, SSP2, SSP3, pais)
+# Salvar ssp_brasil na pasta atual
+write_csv(ssp_brasil, "ssp_brasil.csv")
 
 # Filtrar e transformar dados da Austrália
 ssp_australia <- ssp_raw %>%
@@ -566,12 +533,14 @@ ssp_australia <- ssp_raw %>%
     pais = "Austrália"
   ) %>%
   select(year, SSP1, SSP2, SSP3, pais)
+# Salvar ssp_australia na pasta atual
+write_csv(ssp_australia, "ssp_australia.csv")
 
 ssp_data <- bind_rows(ssp_brasil, ssp_australia) %>%
   pivot_longer(cols = c(SSP1, SSP2, SSP3),
                names_to = "cenario", values_to = "pop_M")
 
-# --- GRÁFICO 7: Cenários SSP -------------------------------------------------
+# --- Fígura 5: Cenários SSP -------------------------------------------------
 g7 <- ggplot(ssp_data,
              aes(x = year, y = pop_M, colour = cenario,
                  linetype = cenario, group = cenario)) +
@@ -593,7 +562,7 @@ g7 <- ggplot(ssp_data,
   scale_x_continuous(breaks = seq(2025, 2050, by = 5)) +
   scale_y_continuous(labels = label_number(suffix = " M")) +
   labs(
-    title    = "Figura 7 – Projeções populacionais por cenário SSP: Brasil e Austrália (2025–2050)",
+    title    = "Figura 5 – Projeções populacionais por cenário SSP: Brasil e Austrália (2025–2050)",
     subtitle = "Baseado nas narrativas dos Shared Socioeconomic Pathways (IPCC/IIASA)",
     x = "Ano", y = "População (milhões)",
     colour   = "Cenário SSP",
@@ -605,6 +574,7 @@ g7 <- ggplot(ssp_data,
 ggsave("figuras/fig7_ssp.pdf", g7, width = 10, height = 5.5, device = "pdf")
 ggsave("figuras/fig7_ssp.png", g7, width = 10, height = 5.5, dpi = 300)
 cat("✔ Figura 7 salva.\n")
+
 
 # =============================================================================
 # SEÇÃO H: TABELA COMPLETA DE INDICADORES — geração automática do .tex
